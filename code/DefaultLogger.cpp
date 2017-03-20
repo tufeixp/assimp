@@ -43,16 +43,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  @brief Implementation of DefaultLogger (and Logger)
  */
 
-#include "DefaultIOSystem.h"
 
 // Default log streams
 #include "Win32DebugLogStream.h"
 #include "StdOStreamLogStream.h"
 #include "FileLogStream.h"
 #include "StringUtils.h"
-#include "../include/assimp/NullLogger.hpp"
-#include "../include/assimp/DefaultLogger.hpp"
-#include "../include/assimp/ai_assert.h"
+
+#include <assimp/DefaultIOSystem.h>
+#include <assimp/NullLogger.hpp>
+#include <assimp/DefaultLogger.hpp>
+#include <assimp/ai_assert.h>
 #include <iostream>
 #include <stdio.h>
 

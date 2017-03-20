@@ -48,9 +48,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BlenderLoader.h"
 #include "BlenderDNA.h"
 #include "BlenderScene.h"
-#include "BlenderSceneGen.h"
 #include <deque>
-#include "./../include/assimp/material.h"
+#include <assimp/material.h>
 
 struct aiTexture;
 
@@ -123,7 +122,7 @@ namespace Blender {
 
     struct ObjectCompare {
         bool operator() (const Object* left, const Object* right) const {
-            return strcmp(left->id.name, right->id.name) == -1;
+            return ::strncmp(left->id.name, right->id.name, strlen( left->id.name ) ) == 0;
         }
     };
 
@@ -144,7 +143,7 @@ namespace Blender {
 
         struct ObjectCompare {
             bool operator() (const Object* left, const Object* right) const {
-                return strcmp(left->id.name, right->id.name) == -1;
+                return ::strncmp( left->id.name, right->id.name, strlen( left->id.name ) ) == 0;
             }
         };
 

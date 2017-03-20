@@ -45,10 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AI_ASELOADER_H_INCLUDED
 
 #include "BaseImporter.h"
-#include "../include/assimp/types.h"
+#include <assimp/types.h>
+#include "ASEParser.h"
 
 struct aiNode;
-#include "ASEParser.h"
 
 namespace Assimp {
 

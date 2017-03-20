@@ -44,14 +44,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Exceptional.h"
 
-#include <string>
-#include <map>
 #include <vector>
 #include <set>
-#include "../include/assimp/types.h"
-#include "../include/assimp/ProgressHandler.hpp"
+#include <assimp/types.h>
+#include <assimp/ProgressHandler.hpp>
 
 struct aiScene;
+struct aiImporterDesc;
 
 namespace Assimp    {
 
@@ -347,7 +346,12 @@ public: // static utilities
     static void ConvertUTF8toISO8859_1(
         std::string& data);
 
-    enum TextFileMode { ALLOW_EMPTY, FORBID_EMPTY };
+    // -------------------------------------------------------------------
+    /// @brief  Enum to define, if empty files are ok or not.
+    enum TextFileMode { 
+        ALLOW_EMPTY,
+        FORBID_EMPTY 
+    };
 
     // -------------------------------------------------------------------
     /** Utility for text file loaders which copies the contents of the
@@ -382,14 +386,10 @@ public: // static utilities
         }
     }
 
-    
-
 protected:
-
-    /** Error description in case there was one. */
+    /// Error description in case there was one.
     std::string m_ErrorText;
-
-    /** Currently set progress handler */
+    /// Currently set progress handler.
     ProgressHandler* m_progress;
 };
 

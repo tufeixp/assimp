@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2008, assimp team
+Copyright (c) 2006-2016, assimp team
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms,
@@ -46,8 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include "../include/assimp/ai_assert.h"
-
+#include <assimp/ai_assert.h>
 
 namespace Assimp {
 namespace Q3BSP {
@@ -74,19 +73,19 @@ voidpf IOSystem2Unzip::open(voidpf opaque, const char* filename, int mode) {
 uLong IOSystem2Unzip::read(voidpf /*opaque*/, voidpf stream, void* buf, uLong size) {
     IOStream* io_stream = (IOStream*) stream;
 
-    return io_stream->Read(buf, 1, size);
+    return static_cast<uLong>(io_stream->Read(buf, 1, size));
 }
 
 uLong IOSystem2Unzip::write(voidpf /*opaque*/, voidpf stream, const void* buf, uLong size) {
     IOStream* io_stream = (IOStream*) stream;
 
-    return io_stream->Write(buf, 1, size);
+    return static_cast<uLong>(io_stream->Write(buf, 1, size));
 }
 
 long IOSystem2Unzip::tell(voidpf /*opaque*/, voidpf stream) {
     IOStream* io_stream = (IOStream*) stream;
 
-    return io_stream->Tell();
+    return static_cast<long>(io_stream->Tell());
 }
 
 long IOSystem2Unzip::seek(voidpf /*opaque*/, voidpf stream, uLong offset, int origin) {

@@ -53,11 +53,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ByteSwapper.h"
 #include "ProcessHelper.h"
 #include "ConvertToLHProcess.h"
+#include <assimp/IOSystem.hpp>
+#include <assimp/importerdesc.h>
 #include <memory>
-#include "../include/assimp/IOSystem.hpp"
 #include <sstream>
 #include <iomanip>
-
+#include <map>
 
 using namespace Assimp;
 
@@ -426,7 +427,7 @@ void LWOImporter::InternReadFile( const std::string& pFile,
         }
 
         // Generate nodes to render the mesh. Store the source layer in the mParent member of the nodes
-        unsigned int num = apcMeshes.size() - meshStart;
+        unsigned int num = static_cast<unsigned int>(apcMeshes.size() - meshStart);
         if (layer.mName != "<LWODefault>" || num > 0) {
             aiNode* pcNode = new aiNode();
             apcNodes[layer.mIndex] = pcNode;
@@ -781,7 +782,7 @@ void LWOImporter::LoadLWO2Polygons(unsigned int length)
     // Determine the type of the polygons
     switch (type)
     {
-        // read unsupported stuff too (although we wont process it)
+        // read unsupported stuff too (although we won't process it)
     case  AI_LWO_MBAL:
         DefaultLogger::get()->warn("LWO2: Encountered unsupported primitive chunk (METABALL)");
         break;
@@ -1058,8 +1059,6 @@ void LWOImporter::LoadLWO2VertexMap(unsigned int length, bool perPoly)
     LWO::PointList& pointList = mCurLayer->mTempPoints;
     LWO::ReferrerList& refList = mCurLayer->mPointReferrers;
 
-    float temp[4];
-
     const unsigned int numPoints = (unsigned int)pointList.size();
     const unsigned int numFaces  = (unsigned int)list.size();
 
@@ -1123,10 +1122,12 @@ void LWOImporter::LoadLWO2VertexMap(unsigned int length, bool perPoly)
                 }
             }
         }
+
+        std::unique_ptr<float[]> temp(new float[type]);
         for (unsigned int l = 0; l < type;++l)
             temp[l] = GetF4();
 
-        DoRecursiveVMAPAssignment(base,type,idx, temp);
+        DoRecursiveVMAPAssignment(base,type,idx, temp.get());
         mFileBuffer += diff;
     }
 }

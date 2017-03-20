@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_IFC_IMPORTER
 #include "IFCUtil.h"
 #include <limits>
-#include "../include/assimp/material.h"
+#include <assimp/material.h>
 
 namespace Assimp {
     namespace IFC {
@@ -159,7 +159,7 @@ unsigned int ProcessMaterials(uint64_t id, unsigned int prevMatId, ConversionDat
                         FillMaterial(mat.get(), surf, conv);
 
                         conv.materials.push_back(mat.release());
-                        unsigned int matindex = conv.materials.size() - 1;
+                        unsigned int matindex = static_cast<unsigned int>(conv.materials.size() - 1);
                         conv.cached_materials[surf] = matindex;
                         return matindex;
             }

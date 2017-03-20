@@ -51,14 +51,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AssbinLoader.h"
 #include "assbin_chunks.h"
 #include "MemoryIOWrapper.h"
-#include "../include/assimp/mesh.h"
-#include "../include/assimp/anim.h"
-#include "../include/assimp/scene.h"
+#include <assimp/mesh.h>
+#include <assimp/anim.h>
+#include <assimp/scene.h>
+#include <assimp/importerdesc.h>
 
 #ifdef ASSIMP_BUILD_NO_OWN_ZLIB
 #   include <zlib.h>
 #else
-#   include "../contrib/zlib/zlib.h"
+#   include <contrib/zlib/zlib.h>
 #endif
 
 using namespace Assimp;
@@ -659,7 +660,7 @@ void AssbinImporter::InternReadFile( const std::string& pFile, aiScene* pScene, 
     if (compressed)
     {
         uLongf uncompressedSize = Read<uint32_t>(stream);
-        uLongf compressedSize = stream->FileSize() - stream->Tell();
+        uLongf compressedSize = static_cast<uLongf>(stream->FileSize() - stream->Tell());
 
         unsigned char * compressedData = new unsigned char[ compressedSize ];
         stream->Read( compressedData, 1, compressedSize );

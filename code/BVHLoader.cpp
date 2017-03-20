@@ -46,11 +46,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BVHLoader.h"
 #include "fast_atof.h"
 #include "SkeletonMeshBuilder.h"
-#include "../include/assimp/Importer.hpp"
+#include <assimp/Importer.hpp>
 #include <memory>
 #include "TinyFormatter.h"
-#include "../include/assimp/IOSystem.hpp"
-#include "../include/assimp/scene.h"
+#include <assimp/IOSystem.hpp>
+#include <assimp/scene.h>
+#include <assimp/importerdesc.h>
 
 using namespace Assimp;
 using namespace Assimp::Formatter;
@@ -237,7 +238,7 @@ aiNode* BVHLoader::ReadNode()
     // add the child nodes if there are any
     if( childNodes.size() > 0)
     {
-        node->mNumChildren = childNodes.size();
+        node->mNumChildren = static_cast<unsigned int>(childNodes.size());
         node->mChildren = new aiNode*[node->mNumChildren];
         std::copy( childNodes.begin(), childNodes.end(), node->mChildren);
     }
@@ -443,7 +444,7 @@ void BVHLoader::CreateAnimation( aiScene* pScene)
     anim->mDuration = double( mAnimNumFrames - 1);
 
     // now generate the tracks for all nodes
-    anim->mNumChannels = mNodes.size();
+    anim->mNumChannels = static_cast<unsigned int>(mNodes.size());
     anim->mChannels = new aiNodeAnim*[anim->mNumChannels];
 
     // FIX: set the array elements to NULL to ensure proper deletion if an exception is thrown

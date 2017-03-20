@@ -93,6 +93,8 @@ SET( PUBLIC_HEADERS
   ${HEADER_PATH}/NullLogger.hpp
   ${HEADER_PATH}/cexport.h
   ${HEADER_PATH}/Exporter.hpp
+  ${HEADER_PATH}/DefaultIOStream.h
+  ${HEADER_PATH}/DefaultIOSystem.h
 )
 
 SET( Core_SRCS
@@ -125,9 +127,8 @@ SET( Common_SRCS
   ByteSwapper.h
   DefaultProgressHandler.h
   DefaultIOStream.cpp
-  DefaultIOStream.h
   DefaultIOSystem.cpp
-  DefaultIOSystem.h
+  CInterfaceIOWrapper.cpp
   CInterfaceIOWrapper.h
   Hash.h
   Importer.cpp
@@ -162,6 +163,7 @@ SET( Common_SRCS
   RemoveComments.h
   Subdivision.cpp
   Subdivision.h
+  scene.cpp
   Vertex.h
   LineSplitter.h
   TinyFormatter.h
@@ -171,6 +173,9 @@ SET( Common_SRCS
   Bitmap.h
   XMLTools.h
   Version.cpp
+  IOStreamBuffer.h
+  CreateAnimMesh.h
+  CreateAnimMesh.cpp
 )
 SOURCE_GROUP(Common FILES ${Common_SRCS})
 
@@ -182,10 +187,16 @@ IF ( ASSIMP_BUILD_NONFREE_C4D_IMPORTER )
   SOURCE_GROUP( C4D FILES ${C4D_SRCS})
 ENDIF ( ASSIMP_BUILD_NONFREE_C4D_IMPORTER )
 
+# if this variable is set to TRUE, the user can manually disable importers by setting
+# ASSIMP_BUILD_XXX_IMPORTER to FALSE for each importer
+# if this variable is set to FALSE, the user can manually enable importers by setting
+# ASSIMP_BUILD_XXX_IMPORTER to TRUE for each importer
+OPTION(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT "default value of all ASSIMP_BUILD_XXX_IMPORTER value" TRUE)
+
 # macro to add the CMake Option ADD_ASSIMP_IMPORTER_<name> which enables compile of loader
 # this way selective loaders can be compiled (reduces filesize + compile time)
 MACRO(ADD_ASSIMP_IMPORTER name)
-  OPTION(ASSIMP_BUILD_${name}_IMPORTER "build the ${name} importer" TRUE)
+  OPTION(ASSIMP_BUILD_${name}_IMPORTER "build the ${name} importer" ${ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT})
   IF(ASSIMP_BUILD_${name}_IMPORTER)
     LIST(APPEND ASSIMP_LOADER_SRCS ${ARGN})
     SET(ASSIMP_IMPORTERS_ENABLED "${ASSIMP_IMPORTERS_ENABLED} ${name}")
@@ -195,6 +206,7 @@ MACRO(ADD_ASSIMP_IMPORTER name)
     SET(${name}_SRC "")
     SET(ASSIMP_IMPORTERS_DISABLED "${ASSIMP_IMPORTERS_DISABLED} ${name}")
     add_definitions(-DASSIMP_BUILD_NO_${name}_IMPORTER)
+    add_definitions(-DASSIMP_BUILD_NO_${name}_EXPORTER)
   ENDIF()
 ENDMACRO()
 
@@ -202,7 +214,17 @@ SET(ASSIMP_LOADER_SRCS "")
 SET(ASSIMP_IMPORTERS_ENABLED "") # list of enabled importers
 SET(ASSIMP_IMPORTERS_DISABLED "") # disabled list (used to print)
 
-ADD_ASSIMP_IMPORTER(3DS
+ADD_ASSIMP_IMPORTER( AMF
+  AMFImporter.hpp
+  AMFImporter_Macro.hpp
+  AMFImporter_Node.hpp
+  AMFImporter.cpp
+  AMFImporter_Geometry.cpp
+  AMFImporter_Material.cpp
+  AMFImporter_Postprocess.cpp
+)
+
+ADD_ASSIMP_IMPORTER( 3DS
   3DSConverter.cpp
   3DSHelper.h
   3DSLoader.cpp
@@ -211,41 +233,41 @@ ADD_ASSIMP_IMPORTER(3DS
   3DSExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(AC
+ADD_ASSIMP_IMPORTER( AC
   ACLoader.cpp
   ACLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(ASE
+ADD_ASSIMP_IMPORTER( ASE
   ASELoader.cpp
   ASELoader.h
   ASEParser.cpp
   ASEParser.h
 )
 
-ADD_ASSIMP_IMPORTER(ASSBIN
+ADD_ASSIMP_IMPORTER( ASSBIN
   AssbinExporter.h
   AssbinExporter.cpp
   AssbinLoader.h
   AssbinLoader.cpp
 )
 
-ADD_ASSIMP_IMPORTER(ASSXML
+ADD_ASSIMP_IMPORTER( ASSXML
   AssxmlExporter.h
   AssxmlExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(B3D
+ADD_ASSIMP_IMPORTER( B3D
   B3DImporter.cpp
   B3DImporter.h
 )
 
-ADD_ASSIMP_IMPORTER(BVH
+ADD_ASSIMP_IMPORTER( BVH
   BVHLoader.cpp
   BVHLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(COLLADA
+ADD_ASSIMP_IMPORTER( COLLADA
   ColladaHelper.h
   ColladaLoader.cpp
   ColladaLoader.h
@@ -255,39 +277,39 @@ ADD_ASSIMP_IMPORTER(COLLADA
   ColladaExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(DXF
+ADD_ASSIMP_IMPORTER( DXF
   DXFLoader.cpp
   DXFLoader.h
   DXFHelper.h
 )
 
-ADD_ASSIMP_IMPORTER(CSM
+ADD_ASSIMP_IMPORTER( CSM
   CSMLoader.cpp
   CSMLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(HMP
+ADD_ASSIMP_IMPORTER( HMP
   HMPFileData.h
   HMPLoader.cpp
   HMPLoader.h
   HalfLifeFileData.h
 )
 
-ADD_ASSIMP_IMPORTER(IRRMESH
+ADD_ASSIMP_IMPORTER( IRRMESH
   IRRMeshLoader.cpp
   IRRMeshLoader.h
   IRRShared.cpp
   IRRShared.h
 )
 
-ADD_ASSIMP_IMPORTER(IRR
+ADD_ASSIMP_IMPORTER( IRR
   IRRLoader.cpp
   IRRLoader.h
   IRRShared.cpp
   IRRShared.h
 )
 
-ADD_ASSIMP_IMPORTER(LWO
+ADD_ASSIMP_IMPORTER( LWO
   LWOAnimation.cpp
   LWOAnimation.h
   LWOBLoader.cpp
@@ -297,39 +319,39 @@ ADD_ASSIMP_IMPORTER(LWO
   LWOMaterial.cpp
 )
 
-ADD_ASSIMP_IMPORTER(LWS
+ADD_ASSIMP_IMPORTER( LWS
   LWSLoader.cpp
   LWSLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(MD2
+ADD_ASSIMP_IMPORTER( MD2
   MD2FileData.h
   MD2Loader.cpp
   MD2Loader.h
   MD2NormalTable.h
 )
 
-ADD_ASSIMP_IMPORTER(MD3
+ADD_ASSIMP_IMPORTER( MD3
   MD3FileData.h
   MD3Loader.cpp
   MD3Loader.h
 )
 
-ADD_ASSIMP_IMPORTER(MD5
+ADD_ASSIMP_IMPORTER( MD5
   MD5Loader.cpp
   MD5Loader.h
   MD5Parser.cpp
   MD5Parser.h
 )
 
-ADD_ASSIMP_IMPORTER(MDC
+ADD_ASSIMP_IMPORTER( MDC
   MDCFileData.h
   MDCLoader.cpp
   MDCLoader.h
   MDCNormalTable.h
 )
 
-ADD_ASSIMP_IMPORTER(MDL
+ADD_ASSIMP_IMPORTER( MDL
   MDLDefaultColorMap.h
   MDLFileData.h
   MDLLoader.cpp
@@ -343,22 +365,22 @@ SET( MaterialSystem_SRCS
 )
 SOURCE_GROUP( MaterialSystem FILES ${MaterialSystem_SRCS})
 
-ADD_ASSIMP_IMPORTER(NFF
+ADD_ASSIMP_IMPORTER( NFF
   NFFLoader.cpp
   NFFLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(NDO
+ADD_ASSIMP_IMPORTER( NDO
   NDOLoader.cpp
   NDOLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(OFF
+ADD_ASSIMP_IMPORTER( OFF
   OFFLoader.cpp
   OFFLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(OBJ
+ADD_ASSIMP_IMPORTER( OBJ
   ObjFileData.h
   ObjFileImporter.cpp
   ObjFileImporter.h
@@ -367,12 +389,11 @@ ADD_ASSIMP_IMPORTER(OBJ
   ObjFileParser.cpp
   ObjFileParser.h
   ObjTools.h
-
   ObjExporter.h
   ObjExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(OGRE
+ADD_ASSIMP_IMPORTER( OGRE
   OgreImporter.h
   OgreStructs.h
   OgreParsingUtils.h
@@ -385,7 +406,7 @@ ADD_ASSIMP_IMPORTER(OGRE
   OgreMaterial.cpp
 )
 
-ADD_ASSIMP_IMPORTER(OPENGEX
+ADD_ASSIMP_IMPORTER( OPENGEX
   OpenGEXExporter.cpp
   OpenGEXExporter.h
   OpenGEXImporter.cpp
@@ -393,7 +414,7 @@ ADD_ASSIMP_IMPORTER(OPENGEX
   OpenGEXStructs.h
 )
 
-ADD_ASSIMP_IMPORTER(PLY
+ADD_ASSIMP_IMPORTER( PLY
   PlyLoader.cpp
   PlyLoader.h
   PlyParser.cpp
@@ -402,18 +423,18 @@ ADD_ASSIMP_IMPORTER(PLY
   PlyExporter.h
 )
 
-ADD_ASSIMP_IMPORTER(MS3D
+ADD_ASSIMP_IMPORTER( MS3D
   MS3DLoader.cpp
   MS3DLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(COB
+ADD_ASSIMP_IMPORTER( COB
   COBLoader.cpp
   COBLoader.h
   COBScene.h
 )
 
-ADD_ASSIMP_IMPORTER(BLEND
+ADD_ASSIMP_IMPORTER( BLEND
   BlenderLoader.cpp
   BlenderLoader.h
   BlenderDNA.cpp
@@ -431,10 +452,11 @@ ADD_ASSIMP_IMPORTER(BLEND
   BlenderTessellator.cpp
 )
 
-ADD_ASSIMP_IMPORTER(IFC
+ADD_ASSIMP_IMPORTER( IFC
   IFCLoader.cpp
   IFCLoader.h
-  IFCReaderGen.cpp
+  IFCReaderGen1.cpp
+  IFCReaderGen2.cpp
   IFCReaderGen.h
   IFCUtil.h
   IFCUtil.cpp
@@ -450,17 +472,21 @@ ADD_ASSIMP_IMPORTER(IFC
   STEPFileEncoding.cpp
   STEPFileEncoding.h
 )
-if (MSVC AND ASSIMP_BUILD_IFC_IMPORTER)
-  set_source_files_properties(IFCReaderGen.cpp PROPERTIES COMPILE_FLAGS "/bigobj")
-endif (MSVC AND ASSIMP_BUILD_IFC_IMPORTER)
+if (ASSIMP_BUILD_IFC_IMPORTER)
+  if (MSVC)
+    set_source_files_properties(IFCReaderGen1.cpp IFCReaderGen2.cpp PROPERTIES COMPILE_FLAGS "/bigobj")
+  elseif(CMAKE_COMPILER_IS_MINGW)
+    set_source_files_properties(IFCReaderGen1.cpp IFCReaderGen2.cpp PROPERTIES COMPILE_FLAGS "-O2 -Wa,-mbig-obj")
+  endif()
+endif (ASSIMP_BUILD_IFC_IMPORTER)
 
-ADD_ASSIMP_IMPORTER(XGL
+ADD_ASSIMP_IMPORTER( XGL
   XGLLoader.cpp
   XGLLoader.h
 )
 
 
-ADD_ASSIMP_IMPORTER(FBX
+ADD_ASSIMP_IMPORTER( FBX
   FBXImporter.cpp
   FBXCompileConfig.h
   FBXImporter.h
@@ -543,12 +569,12 @@ SET( PostProcessing_SRCS
 )
 SOURCE_GROUP( PostProcessing FILES ${PostProcessing_SRCS})
 
-ADD_ASSIMP_IMPORTER(Q3D
+ADD_ASSIMP_IMPORTER( Q3D
   Q3DLoader.cpp
   Q3DLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(Q3BSP
+ADD_ASSIMP_IMPORTER( Q3BSP
   Q3BSPFileData.h
   Q3BSPFileParser.h
   Q3BSPFileParser.cpp
@@ -558,39 +584,39 @@ ADD_ASSIMP_IMPORTER(Q3BSP
   Q3BSPZipArchive.cpp
 )
 
-ADD_ASSIMP_IMPORTER(RAW
+ADD_ASSIMP_IMPORTER( RAW
   RawLoader.cpp
   RawLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(SIB
+ADD_ASSIMP_IMPORTER( SIB
   SIBImporter.cpp
   SIBImporter.h
 )
 
-ADD_ASSIMP_IMPORTER(SMD
+ADD_ASSIMP_IMPORTER( SMD
   SMDLoader.cpp
   SMDLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(STL
+ADD_ASSIMP_IMPORTER( STL
   STLLoader.cpp
   STLLoader.h
   STLExporter.h
   STLExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(TERRAGEN
+ADD_ASSIMP_IMPORTER( TERRAGEN
   TerragenLoader.cpp
   TerragenLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(3D
+ADD_ASSIMP_IMPORTER( 3D
   UnrealLoader.cpp
   UnrealLoader.h
 )
 
-ADD_ASSIMP_IMPORTER(X
+ADD_ASSIMP_IMPORTER( X
   XFileHelper.h
   XFileImporter.cpp
   XFileImporter.h
@@ -600,28 +626,42 @@ ADD_ASSIMP_IMPORTER(X
   XFileExporter.cpp
 )
 
-ADD_ASSIMP_IMPORTER(GLTF
+ADD_ASSIMP_IMPORTER(X3D
+  X3DExporter.cpp
+  X3DExporter.hpp
+  X3DImporter.cpp
+  X3DImporter.hpp
+  X3DImporter_Geometry2D.cpp
+  X3DImporter_Geometry3D.cpp
+  X3DImporter_Group.cpp
+  X3DImporter_Light.cpp
+  X3DImporter_Macro.hpp
+  X3DImporter_Metadata.cpp
+  X3DImporter_Networking.cpp
+  X3DImporter_Node.hpp
+  X3DImporter_Postprocess.cpp
+  X3DImporter_Rendering.cpp
+  X3DImporter_Shape.cpp
+  X3DImporter_Texturing.cpp
+)
+
+ADD_ASSIMP_IMPORTER( GLTF
   glTFAsset.h
   glTFAsset.inl
   glTFAssetWriter.h
   glTFAssetWriter.inl
-
   glTFImporter.cpp
   glTFImporter.h
-
   glTFExporter.h
   glTFExporter.cpp
 )
 
-
-ADD_ASSIMP_IMPORTER(3MF
+ADD_ASSIMP_IMPORTER( 3MF
     D3MFImporter.h
     D3MFImporter.cpp
     D3MFOpcPackage.h
     D3MFOpcPackage.cpp
-
 )
-
 
 SET( Step_SRCS
   StepExporter.h
@@ -665,7 +705,6 @@ SET( Clipper_SRCS
 )
 SOURCE_GROUP( Clipper FILES ${Clipper_SRCS})
 
-
 SET( Poly2Tri_SRCS
   ../contrib/poly2tri/poly2tri/common/shapes.cc
   ../contrib/poly2tri/poly2tri/common/shapes.h
@@ -705,7 +744,54 @@ SET ( openddl_parser_SRCS
 )
 SOURCE_GROUP( openddl_parser FILES ${openddl_parser_SRCS})
 
+SET ( open3dgc_SRCS
+  ../contrib/Open3DGC/o3dgcAdjacencyInfo.h
+  ../contrib/Open3DGC/o3dgcArithmeticCodec.cpp
+  ../contrib/Open3DGC/o3dgcArithmeticCodec.h
+  ../contrib/Open3DGC/o3dgcBinaryStream.h
+  ../contrib/Open3DGC/o3dgcCommon.h
+  ../contrib/Open3DGC/o3dgcDVEncodeParams.h
+  ../contrib/Open3DGC/o3dgcDynamicVectorDecoder.cpp
+  ../contrib/Open3DGC/o3dgcDynamicVectorDecoder.h
+  ../contrib/Open3DGC/o3dgcDynamicVectorEncoder.cpp
+  ../contrib/Open3DGC/o3dgcDynamicVectorEncoder.h
+  ../contrib/Open3DGC/o3dgcDynamicVector.h
+  ../contrib/Open3DGC/o3dgcFIFO.h
+  ../contrib/Open3DGC/o3dgcIndexedFaceSet.h
+  ../contrib/Open3DGC/o3dgcIndexedFaceSet.inl
+  ../contrib/Open3DGC/o3dgcSC3DMCDecoder.h
+  ../contrib/Open3DGC/o3dgcSC3DMCDecoder.inl
+  ../contrib/Open3DGC/o3dgcSC3DMCEncodeParams.h
+  ../contrib/Open3DGC/o3dgcSC3DMCEncoder.h
+  ../contrib/Open3DGC/o3dgcSC3DMCEncoder.inl
+  ../contrib/Open3DGC/o3dgcTimer.h
+  ../contrib/Open3DGC/o3dgcTools.cpp
+  ../contrib/Open3DGC/o3dgcTriangleFans.cpp
+  ../contrib/Open3DGC/o3dgcTriangleFans.h
+  ../contrib/Open3DGC/o3dgcTriangleListDecoder.h
+  ../contrib/Open3DGC/o3dgcTriangleListDecoder.inl
+  ../contrib/Open3DGC/o3dgcTriangleListEncoder.h
+  ../contrib/Open3DGC/o3dgcTriangleListEncoder.inl
+  ../contrib/Open3DGC/o3dgcVector.h
+  ../contrib/Open3DGC/o3dgcVector.inl
+)
+SOURCE_GROUP( open3dgc FILES ${open3dgc_SRCS})
+
+# Check dependencies for glTF importer with Open3DGC-compression.
+# RT-extensions is used in "contrib/Open3DGC/o3dgcTimer.h" for collecting statistics. Pointed file
+# has implementation for different platforms: WIN32, __MACH__ and other ("else" block).
+FIND_PACKAGE(RT QUIET)
+IF (RT_FOUND OR MSVC)
+  SET( ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC 1 )
+  ADD_DEFINITIONS( -DASSIMP_IMPORTER_GLTF_USE_OPEN3DGC=1 )
+ELSE ()
+  SET (open3dgc_SRCS "")
+  MESSAGE (INFO " RT-extension not found. glTF import/export will be built without Open3DGC-compression.")
+  #!TODO: off course is better to remove statistics timers from o3dgc codec. Or propose to choose what to use.
+ENDIF ()
+
 INCLUDE_DIRECTORIES( "../contrib/rapidjson/include" )
+INCLUDE_DIRECTORIES( "../contrib" )
 
 # VC2010 fixes
 if(MSVC10)
@@ -726,6 +812,7 @@ if (UNZIP_FOUND)
   SET (unzip_compile_SRCS "")
 else (UNZIP_FOUND)
   SET (unzip_compile_SRCS ${unzip_SRCS})
+  INCLUDE_DIRECTORIES( "../contrib/unzip/" )
 endif (UNZIP_FOUND)
 
 MESSAGE(STATUS "Enabled formats:${ASSIMP_IMPORTERS_ENABLED}")
@@ -751,6 +838,7 @@ SET( assimp_src
   ${Poly2Tri_SRCS}
   ${Clipper_SRCS}
   ${openddl_parser_SRCS}
+  ${open3dgc_SRCS}
   # Necessary to show the headers in the project when using the VC++ generator:
 
   ${PUBLIC_HEADERS}
@@ -779,8 +867,8 @@ if(ANDROID AND ASSIMP_ANDROID_JNIIOSYSTEM)
 endif(ANDROID AND ASSIMP_ANDROID_JNIIOSYSTEM)
 
 IF (ASSIMP_BUILD_NONFREE_C4D_IMPORTER)
-  TARGET_LINK_LIBRARIES(assimp optimized ${C4D_RELEASE_LIBRARY})
-  TARGET_LINK_LIBRARIES(assimp debug ${C4D_DEBUG_LIBRARY})
+  TARGET_LINK_LIBRARIES(assimp optimized ${C4D_RELEASE_LIBRARIES})
+  TARGET_LINK_LIBRARIES(assimp debug ${C4D_DEBUG_LIBRARIES})
   TARGET_LINK_LIBRARIES(assimp ${C4D_EXTRA_LIBRARIES})
 ENDIF (ASSIMP_BUILD_NONFREE_C4D_IMPORTER)
 
@@ -813,7 +901,7 @@ SET_TARGET_PROPERTIES( assimp PROPERTIES
 )
 
 if (APPLE)
-  SET_TARGET_PROPERTIES( assimp PROPERTIES INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}")
+  SET_TARGET_PROPERTIES( assimp PROPERTIES INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${ASSIMP_LIB_INSTALL_DIR}")
 endif()
 
 # Build against external unzip, or add ../contrib/unzip so
@@ -822,8 +910,13 @@ if (UNZIP_FOUND)
   INCLUDE_DIRECTORIES(${UNZIP_INCLUDE_DIRS})
   TARGET_LINK_LIBRARIES(assimp ${UNZIP_LIBRARIES})
 else (UNZIP_FOUND)
-  INCLUDE_DIRECTORIES("../contrib/unzip")
+  INCLUDE_DIRECTORIES("../")
 endif (UNZIP_FOUND)
+
+# Add RT-extension library for glTF importer with Open3DGC-compression.
+IF (RT_FOUND AND ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC)
+  TARGET_LINK_LIBRARIES(assimp ${RT_LIBRARY})
+ENDIF (RT_FOUND AND ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC)
 
 INSTALL( TARGETS assimp
   LIBRARY DESTINATION ${ASSIMP_LIB_INSTALL_DIR}
@@ -848,3 +941,15 @@ if(MSVC AND ASSIMP_INSTALL_PDB)
     CONFIGURATIONS RelWithDebInfo
   )
 endif ()
+
+if (ASSIMP_COVERALLS)
+    include(Coveralls)
+
+    set(COVERAGE_SRCS ${assimp_src} ${TEST_SRCS} )
+
+    # Create the coveralls target.
+    coveralls_setup(
+        "${COVERAGE_SRCS}" # The source files.
+        ON                 # If we should upload.
+        "${PROJECT_SOURCE_DIR}/cmake-modules/") # (Optional) Alternate project cmake module path.
+endif()

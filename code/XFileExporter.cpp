@@ -41,23 +41,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifndef ASSIMP_BUILD_NO_EXPORT
-#ifndef ASSIMP_BUILD_NO_XFILE_EXPORTER
+#ifndef ASSIMP_BUILD_NO_X_EXPORTER
 #include "XFileExporter.h"
 #include "ConvertToLHProcess.h"
 #include "Bitmap.h"
 #include "BaseImporter.h"
 #include "fast_atof.h"
 #include "SceneCombiner.h"
-#include "DefaultIOSystem.h"
+#include <assimp/DefaultIOSystem.h>
 #include <ctime>
 #include <set>
 #include <memory>
 #include "Exceptional.h"
-#include "../include/assimp/IOSystem.hpp"
-#include "../include/assimp/scene.h"
-#include "../include/assimp/light.h"
-
-
+#include <assimp/IOSystem.hpp>
+#include <assimp/scene.h>
+#include <assimp/light.h>
 
 using namespace Assimp;
 
@@ -106,6 +104,7 @@ XFileExporter::XFileExporter(const aiScene* pScene, IOSystem* pIOSystem, const s
 {
     // make sure that all formatting happens using the standard, C locale and not the user's current locale
     mOutput.imbue( std::locale("C") );
+    mOutput.precision(16);
 
     // start writing
     WriteFile();
@@ -514,7 +513,7 @@ std::string XFileExporter::toXFileString(aiString &name)
     return str;
 }
 
-void XFileExporter::writePath(aiString path)
+void XFileExporter::writePath(const aiString &path)
 {
     std::string str = std::string(path.C_Str());
     BaseImporter::ConvertUTF8toISO8859_1(str);
@@ -531,4 +530,3 @@ void XFileExporter::writePath(aiString path)
 
 #endif
 #endif
-

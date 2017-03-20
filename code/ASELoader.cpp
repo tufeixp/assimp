@@ -50,12 +50,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StringComparison.h"
 #include "SkeletonMeshBuilder.h"
 #include "TargetAnimation.h"
-#include "../include/assimp/Importer.hpp"
-#include <memory>
-#include "../include/assimp/IOSystem.hpp"
-#include "../include/assimp/DefaultLogger.hpp"
-#include "../include/assimp/scene.h"
+#include <assimp/Importer.hpp>
+#include <assimp/IOSystem.hpp>
+#include <assimp/DefaultLogger.hpp>
+#include <assimp/scene.h>
+#include <assimp/importerdesc.h>
 
+#include <memory>
 
 // utilities
 #include "fast_atof.h"
@@ -819,10 +820,10 @@ void CopyASETexture(aiMaterial& mat, ASE::Texture& texture, aiTextureType type)
 
     // Setup the texture blend factor
     if (is_not_qnan(texture.mTextureBlend))
-        mat.AddProperty<float>( &texture.mTextureBlend, 1, AI_MATKEY_TEXBLEND(type,0));
+        mat.AddProperty<ai_real>( &texture.mTextureBlend, 1, AI_MATKEY_TEXBLEND(type,0));
 
     // Setup texture UV transformations
-    mat.AddProperty<float>(&texture.mOffsetU,5,AI_MATKEY_UVTRANSFORM(type,0));
+    mat.AddProperty<ai_real>(&texture.mOffsetU,5,AI_MATKEY_UVTRANSFORM(type,0));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -865,7 +866,7 @@ void ASEImporter::ConvertMaterial(ASE::Material& mat)
     }
 
     // opacity
-    mat.pcInstance->AddProperty<float>( &mat.mTransparency,1,AI_MATKEY_OPACITY);
+    mat.pcInstance->AddProperty<ai_real>( &mat.mTransparency,1,AI_MATKEY_OPACITY);
 
     // Two sided rendering?
     if (mat.mTwoSided)

@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 
 #include "StreamWriter.h"
-#include "./../include/assimp/material.h"
+#include <assimp/material.h>
 
 struct aiScene;
 struct aiNode;
@@ -80,6 +80,7 @@ private:
     void WriteString(const aiString& s);
     void WriteColor(const aiColor3D& color);
     void WritePercentChunk(float f);
+    void WritePercentChunk(double f);
 
 private:
 

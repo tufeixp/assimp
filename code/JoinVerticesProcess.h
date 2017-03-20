@@ -44,7 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AI_JOINVERTICESPROCESS_H_INC
 
 #include "BaseProcess.h"
-#include "../include/assimp/types.h"
+#include <assimp/types.h>
+
 struct aiMesh;
 
 namespace Assimp
@@ -61,7 +62,6 @@ namespace Assimp
 class ASSIMP_API JoinVerticesProcess : public BaseProcess
 {
 public:
-
     JoinVerticesProcess();
     ~JoinVerticesProcess();
 
